@@ -27,6 +27,7 @@
 'use strict';
 
 const fs = require('fs');
+const crypto = require('crypto');
 const vm = require('vm');
 const path = require('path');
 
@@ -1531,6 +1532,61 @@ for (const page of PAGES) {
       /待核实/.test(refSeg) && /未复现/.test(refSeg),
       `编号=[${ids.join(', ')}]；方法名=[${methods.join(', ')}]；正文引用齐全=${citedInText}；` +
       `如实标注待核实=${/待核实/.test(refSeg)}；声明未复现=${/未复现/.test(refSeg)}`);
+  }
+
+  // 13) 全部内联 SVG 的字号下限（AC5 第一条：任何 <text> 字号不得小于 10）
+  //     静态解析：取 <text> 自身的 font-size；缺失时继承最近的 <g font-size="...">；
+  //     两者都没有则按 SVG 默认 16 计（必然 ≥ 10，合规）。
+  {
+    const tech = readIf('tech.html') || '';
+    const svgs = tech.match(/<svg class="figure"[\s\S]*?<\/svg>/g) || [];
+    const small = [];
+    let totalTexts = 0;
+    svgs.forEach((svg, i) => {
+      const gm = /<g[^>]*font-size="([\d.]+)"/.exec(svg);
+      const inherited = gm ? parseFloat(gm[1]) : 16;
+      const re = /<text\b([^>]*)>/g;
+      let m;
+      while ((m = re.exec(svg)) !== null) {
+        totalTexts++;
+        const own = /font-size="([\d.]+)"/.exec(m[1]);
+        const size = own ? parseFloat(own[1]) : inherited;
+        if (size < 10) small.push(`图 ${i + 1}: ${size}`);
+      }
+    });
+    check(`全部内联 SVG 的字号 ≥ 10（共 ${svgs.length} 张图、${totalTexts} 个 <text>）`,
+      svgs.length === 10 && totalTexts > 100 && small.length === 0,
+      small.length === 0 ? `${totalTexts} 个 <text> 全部 ≥ 10` : `小于 10 的字号=[${small.join('；')}]`);
+  }
+
+  // 14) 几何体检结果（AC5 第二条：文字在容器内 / 不重叠 / 不越界 / 边距够 / 字号够）
+  //     这几项是**几何量**，静态读文本算不出来，因此由 tests/svg-geometry.node.js 驱动真实
+  //     浏览器测出来，落在 tests/svg-metrics.json。这里校验"问题数 0"且**每张图的哈希与当前
+  //     tech.html 一致** —— 改了 SVG 却没重新测量会立刻失败，避免用过期数据蒙混过关。
+  {
+    const mf = path.join(ROOT, 'tests', 'svg-metrics.json');
+    if (!fs.existsSync(mf)) {
+      check('SVG 几何体检结果（tests/svg-metrics.json）', false,
+        '缺文件：请运行 node tests/svg-geometry.node.js，用浏览器 dump-dom 后执行 --parse');
+    } else {
+      const data = JSON.parse(fs.readFileSync(mf, 'utf8'));
+      const tech = readIf('tech.html') || '';
+      const svgs = tech.match(/<svg class="figure"[\s\S]*?<\/svg>/g) || [];
+      const stale = [];
+      (data.figures || []).forEach((f, i) => {
+        if (!svgs[i]) { stale.push(`${f.name}(缺失)`); return; }
+        const h = crypto.createHash('sha256').update(svgs[i], 'utf8').digest('hex').slice(0, 16);
+        if (h !== f.svgSha256) stale.push(`${f.name}(哈希不符)`);
+      });
+      const problems = data.problems || [];
+      const byKind = {};
+      problems.forEach((p) => { byKind[p.kind] = (byKind[p.kind] || 0) + 1; });
+      check(`SVG 几何体检：${(data.figures || []).length} 张图五项检查 0 问题，且测量数据未过期`,
+        (data.figures || []).length === 10 && problems.length === 0 && stale.length === 0,
+        `图数=${(data.figures || []).length}；问题数=${problems.length}` +
+        (problems.length ? `（${Object.keys(byKind).map((k) => k + '×' + byKind[k]).join('，')}）` : '') +
+        `；过期/哈希不符=[${stale.join(', ')}]；测量日期=${data.checkedAt}`);
+    }
   }
 }
 

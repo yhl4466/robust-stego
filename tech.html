@@ -183,7 +183,7 @@
     JPEG 的重编码在频域除以量化步长并取整，逆变换回整数像素时几乎每个像素都会被舍入，偏差恰在 1 个灰度级左右。用本仓库的 JPEG 量化模拟器实测，把 262144 个比特写入最低位后重编码再读回，质量 95 时正确率 49.89%，质量 90 时 49.95%，质量 75 时 50.08%。三个数字都等于随机猜测，说明即使接近无损的质量档也无法保住最低位。
   </p>
 
-<svg class="figure" viewBox="0 0 820 340" role="img" aria-labelledby="figa-title figa-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 848 368" role="img" aria-labelledby="figa-title figa-desc" preserveAspectRatio="xMidYMid meet">
   <title id="figa-title">插图 最低有效位（LSB）在 JPEG 重编码下失效</title>
   <desc id="figa-desc">把 262144 个比特写入图像最低位后经 JPEG 重编码读回，质量 95、90、75 三档的正确率分别为 49.89%、49.95%、50.08%，均等于随机猜测；同一条件下本方法的 DCT 差分调制在质量 75 读到 99.48%，而固定裕量取 2 时只有 71.88%。</desc>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
@@ -378,7 +378,7 @@
     方法由七个部件组成，前四项解决“值被改变”的问题，后三项解决“位置被改变”与“参数未知”的问题。各部件之间通过统一的 64×64 区块网格与 48 字节载荷格式耦合，提取端按固定顺序尝试各条恢复路径。整体数据流与提取端的四条路径如图 1 所示。
   </p>
 
-<svg class="figure" viewBox="0 0 920 400" role="img" aria-labelledby="fig1-title fig1-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 1088 428" role="img" aria-labelledby="fig1-title fig1-desc" preserveAspectRatio="xMidYMid meet">
   <title id="fig1-title">图 1 系统架构</title>
   <desc id="fig1-desc">载体图与秘密图经嵌入端完成分块选块、DCT 差分调制、纠删编码与标尺叠加，输出隐写图 PNG；经过要求无损的文件级信道后，提取端依次尝试常规提取、相位搜索与尺度标定加干扰对消三条路径，最终还原秘密图。</desc>
   <defs>
@@ -387,36 +387,42 @@
     </marker>
   </defs>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <!-- 几何约定：两个"端"框的宽度按**框内最长文字**反推，而不是凭感觉给。
+         嵌入端最长行 "标尺叠加：导频 32 / 16 + 扩频码" 在 11 号字下约 182 单位，
+         加左右内边距后取框宽 215；提取端最长行
+         "① 常规 (0,0) 相位，先 6 对后 4 对，CRC 判定" 约 254 单位，取框宽 290。
+         第一版两框只有 160 / 150，文字直接溢出到框外（用户报告的问题 1）；
+         这里把框加宽、右列整体右移，viewBox 由 920 扩到 1060。 -->
     <rect x="20" y="44" width="120" height="44" rx="8" fill="none" stroke="#7dd3fc"/>
     <text x="80" y="71" text-anchor="middle">载体图</text>
     <rect x="20" y="122" width="120" height="44" rx="8" fill="none" stroke="#7dd3fc"/>
     <text x="80" y="149" text-anchor="middle">秘密图</text>
-    <rect x="200" y="44" width="160" height="122" rx="10" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
-    <text x="280" y="63" text-anchor="middle" fill="#97a3b6" font-size="12">嵌入端</text>
-    <text x="212" y="84" font-size="11">选块 64×64 / 安全块筛选</text>
-    <text x="212" y="102" font-size="11">DCT 差分符号调制 + 自适应裕量</text>
-    <text x="212" y="120" font-size="11">RS 纠删编码（GF(2^16)）</text>
-    <text x="212" y="138" font-size="11">标尺叠加：导频 32 / 16 + 扩频码</text>
-    <text x="280" y="178" text-anchor="middle" fill="#97a3b6" font-size="11.5">14 字节头 + 48 字节载荷 + K/N</text>
-    <rect x="430" y="44" width="120" height="44" rx="8" fill="none" stroke="#7dd3fc"/>
-    <text x="490" y="71" text-anchor="middle">隐写图 PNG</text>
-    <text x="640" y="62" text-anchor="middle" fill="#97a3b6" font-size="11.5">信道：原图 / 文件级无损传输</text>
-    <text x="640" y="78" text-anchor="middle" fill="#97a3b6" font-size="11.5">（普通发送会重编码 → 失效）</text>
-    <rect x="750" y="44" width="150" height="260" rx="10" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
-    <text x="825" y="63" text-anchor="middle" fill="#97a3b6" font-size="12">提取端</text>
-    <text x="762" y="86" font-size="11">① 常规 (0,0) 相位，先 6 对后 4 对，CRC 判定</text>
-    <text x="762" y="104" font-size="11">② 相位 8 px 步长枚举 63 个原点</text>
-    <text x="762" y="122" font-size="11">③ 尺度 导频量倍率 → α/z 双判据</text>
-    <text x="762" y="140" font-size="11">→ 重采样回原尺寸 → 干扰对消 → 再提取</text>
-    <text x="762" y="158" font-size="11">④ 失败 返回 debugMask 与两条路径读数</text>
-    <rect x="750" y="322" width="150" height="44" rx="8" fill="none" stroke="#fbbf24"/>
-    <text x="825" y="349" text-anchor="middle" fill="#fbbf24">还原的秘密图</text>
+    <rect x="200" y="44" width="215" height="122" rx="10" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
+    <text x="307" y="63" text-anchor="middle" fill="#97a3b6" font-size="12">嵌入端</text>
+    <text x="214" y="84" font-size="11">选块 64×64 / 安全块筛选</text>
+    <text x="214" y="102" font-size="11">DCT 差分符号调制 + 自适应裕量</text>
+    <text x="214" y="120" font-size="11">RS 纠删编码（GF(2^16)）</text>
+    <text x="214" y="138" font-size="11">标尺叠加：导频 32 / 16 + 扩频码</text>
+    <text x="307" y="178" text-anchor="middle" fill="#97a3b6" font-size="11.5">14 字节头 + 48 字节载荷 + K/N</text>
+    <rect x="450" y="44" width="120" height="44" rx="8" fill="none" stroke="#7dd3fc"/>
+    <text x="510" y="71" text-anchor="middle">隐写图 PNG</text>
+    <text x="660" y="62" text-anchor="middle" fill="#97a3b6" font-size="11.5">信道：原图 / 文件级无损传输</text>
+    <text x="660" y="78" text-anchor="middle" fill="#97a3b6" font-size="11.5">（普通发送会重编码 → 失效）</text>
+    <rect x="750" y="44" width="290" height="260" rx="10" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
+    <text x="895" y="63" text-anchor="middle" fill="#97a3b6" font-size="12">提取端</text>
+    <text x="764" y="86" font-size="11">① 常规 (0,0) 相位，先 6 对后 4 对，CRC 判定</text>
+    <text x="764" y="104" font-size="11">② 相位 8 px 步长枚举 63 个原点</text>
+    <text x="764" y="122" font-size="11">③ 尺度 导频量倍率 → α/z 双判据</text>
+    <text x="764" y="140" font-size="11">→ 重采样回原尺寸 → 干扰对消 → 再提取</text>
+    <text x="764" y="158" font-size="11">④ 失败 返回 debugMask 与两条路径读数</text>
+    <rect x="750" y="322" width="290" height="44" rx="8" fill="none" stroke="#fbbf24"/>
+    <text x="895" y="349" text-anchor="middle" fill="#fbbf24">还原的秘密图</text>
     <path d="M140 66H200" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
     <path d="M140 144H170V160" fill="none" stroke="#7dd3fc"/>
     <path d="M170 160H200" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
-    <path d="M360 108H430" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
-    <path d="M550 66H750" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
-    <path d="M825 304V322" fill="none" stroke="#fbbf24" marker-end="url(#fig1-arrow)"/>
+    <path d="M415 108H450" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
+    <path d="M570 66H750" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
+    <path d="M895 304V322" fill="none" stroke="#fbbf24" marker-end="url(#fig1-arrow)"/>
   </g>
 </svg>
 <p class="caption">图 1：系统架构。左列为待嵌入的载体图与秘密图，中列为嵌入端的选块、调制、纠删编码与标尺叠加四个部件。右列为要求无损的文件级信道、提取端的三条恢复路径与最终还原的秘密图。</p>
@@ -438,28 +444,28 @@
     提取端只比较两者的相对大小，若 a 大于 b 判为 1，否则判为 0。由于量化对两个系数的影响独立且大致对称，差值会产生抖动而符号保持不变，除非差值本身小于抖动幅度。这一性质是抗压缩能力的直接来源，也解释了为什么不写入系数绝对值：绝对位置会被量化整体漂移。
   </p>
 
-<svg class="figure" viewBox="0 0 900 340" role="img" aria-labelledby="fig2-title fig2-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 928 368" role="img" aria-labelledby="fig2-title fig2-desc" preserveAspectRatio="xMidYMid meet">
   <title id="fig2-title">图 2 DCT 差分调制</title>
   <desc id="fig2-desc">一个 8×8 DCT 系数块的示意：实心高亮为 (2,1)-(1,2) 与 (0,3)-(3,0) 等配对系数位置，虚框为另一组配对位置；比特由一对系数的大小关系决定，a 大于 b 判为 1，b 大于 a 判为 0，而两系数的中值 mid 等于 a 加 b 的一半保持不变。</desc>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
     <text x="20" y="30" font-size="12.5">8×8 DCT 系数块 · 配对系数位置（索引 index = 8v + u）</text>
     <path d="M20 56V312M52 56V312M84 56V312M116 56V312M148 56V312M180 56V312M212 56V312M244 56V312M276 56V312M20 56H276M20 88H276M20 120H276M20 152H276M20 184H276M20 216H276M20 248H276M20 280H276M20 312H276" fill="none" stroke="#7dd3fc" stroke-opacity="0.35"/>
     <rect x="117" y="57" width="30" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#fbbf24" stroke-width="1.6"/>
-    <text x="132" y="76" text-anchor="middle" font-size="9.5" fill="#0f1319">0,3</text>
+    <text x="132" y="76" text-anchor="middle" font-size="10.5" fill="#0f1319">0,3</text>
     <rect x="85" y="89" width="30" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#fbbf24" stroke-width="1.6"/>
-    <text x="100" y="108" text-anchor="middle" font-size="9.5" fill="#0f1319">1,2</text>
+    <text x="100" y="108" text-anchor="middle" font-size="10.5" fill="#0f1319">1,2</text>
     <rect x="53" y="121" width="30" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#fbbf24" stroke-width="1.6"/>
-    <text x="68" y="140" text-anchor="middle" font-size="9.5" fill="#0f1319">2,1</text>
+    <text x="68" y="140" text-anchor="middle" font-size="10.5" fill="#0f1319">2,1</text>
     <rect x="21" y="153" width="30" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#fbbf24" stroke-width="1.6"/>
-    <text x="36" y="172" text-anchor="middle" font-size="9.5" fill="#0f1319">3,0</text>
+    <text x="36" y="172" text-anchor="middle" font-size="10.5" fill="#0f1319">3,0</text>
     <rect x="149" y="89" width="30" height="30" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
-    <text x="164" y="108" text-anchor="middle" font-size="9.5" fill="#fbbf24">1,4</text>
+    <text x="164" y="108" text-anchor="middle" font-size="10.5" fill="#fbbf24">1,4</text>
     <rect x="117" y="121" width="30" height="30" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
-    <text x="132" y="140" text-anchor="middle" font-size="9.5" fill="#fbbf24">2,3</text>
+    <text x="132" y="140" text-anchor="middle" font-size="10.5" fill="#fbbf24">2,3</text>
     <rect x="85" y="153" width="30" height="30" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
-    <text x="100" y="172" text-anchor="middle" font-size="9.5" fill="#fbbf24">3,2</text>
+    <text x="100" y="172" text-anchor="middle" font-size="10.5" fill="#fbbf24">3,2</text>
     <rect x="53" y="185" width="30" height="30" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
-    <text x="68" y="204" text-anchor="middle" font-size="9.5" fill="#fbbf24">4,1</text>
+    <text x="68" y="204" text-anchor="middle" font-size="10.5" fill="#fbbf24">4,1</text>
     <text x="148" y="330" text-anchor="middle" font-size="10.5" fill="#97a3b6">u →（列）　v ↓（行）　DC 位于 (0,0)</text>
     <text x="310" y="86" font-size="12.5" fill="#fbbf24">比特 = 一对系数的大小关系（a, b 为配对系数）</text>
     <text x="310" y="108" font-size="12">a &gt; b → 1　　　b &gt; a → 0　　　mid = (a + b) / 2 不变</text>
@@ -533,7 +539,7 @@
     代价是解码复杂度随 K 增长较快，需要对 K×K 矩阵做消元。实测 K 等于 2000 且 N 等于 4000 时，单次编码加解码平均 1252.7 毫秒，最慢 1401.3 毫秒；K 等于 4096 时单次约 2939 毫秒。控制办法是把源分片固定为 40 字节，使 K 保持在几十到几百的区间。
   </p>
 
-<svg class="figure" viewBox="0 0 760 320" role="img" aria-labelledby="fig3-title fig3-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 788 348" role="img" aria-labelledby="fig3-title fig3-desc" preserveAspectRatio="xMidYMid meet">
   <title id="fig3-title">图 3 N = 2K 冗余关系</title>
   <desc id="fig3-desc">K 个源符号经 GF(2^16) 系统化 Reed-Solomon 编码成为 N 等于 2K 个符号，前 K 个即原始分片；任意收到不少于 K 个符号即可解码，因此理论边界为可容忍 50% 符号丢失，而面积遮挡下的实测稳定区间只有 25% 至 35%。</desc>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
@@ -586,7 +592,7 @@
     配额取左上与右下各 a 个、右上与左下各 b 个，并令 a 加 b 等于 K。这样左半、右半、上半、下半四个半平面各自恰好分到 K 个符号，任何一侧都没有偏斜。桶内再按扫描序做等距抽样，使符号在桶内均匀铺开而不是聚在一角。
   </p>
 
-<svg class="figure" viewBox="0 0 960 320" role="img" aria-labelledby="fig4-title fig4-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 988 348" role="img" aria-labelledby="fig4-title fig4-desc" preserveAspectRatio="xMidYMid meet">
   <title id="fig4-title">图 4 四象限棋盘配额</title>
   <desc id="fig4-desc">4×4 方格网格把承载块分成四个象限：左上与右下各 a 个，右上与左下各 b 个，且 a 加 b 等于 K，因此左、右、上、下四个半平面各自恰好 K 个符号，任一方向被遮挡一半面积时仍可解码。</desc>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
@@ -641,7 +647,7 @@
     导频周期取 32 与 16 像素，每根振幅 1.2，两根导频与扩频载荷叠加后的 PSNR 实测为 44.46 dB。选择周期 32 与 16 而不是更长的周期，是因为自然图像在低频段的能量更高：周期 64 处的峰背比只有 1.19，与背景齐平；周期 32 为 5.49，周期 16 为 10.81。代价是可测缩放区间收窄为约 [0.4, 3.0]，仍完整覆盖 0.5× 至 1.25×。
   </p>
 
-<svg class="figure" viewBox="0 0 800 360" role="img" aria-labelledby="fig5-title fig5-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 828 388" role="img" aria-labelledby="fig5-title fig5-desc" preserveAspectRatio="xMidYMid meet">
 <title id="fig5-title">图 5 双导频波形</title>
 <desc id="fig5-desc">两条沿对角线 d = x + y 的正弦导频，周期分别为 32 与 16 像素，振幅均为 1.2，构成 2:1 频率比。</desc>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
@@ -692,7 +698,7 @@
     粗筛对每个相位取 8 个区块，只有粗筛有命中的相位才进入精探，精探用 16 个区块复核，接受阈值为命中率的 10%。粗筛区块数从前一版本的 2 个提升到 8 个是必要的：2 个区块时采样点是确定性的第 0 个与中间那个，不同裁切量会反复采到同一批原图区块，实测四边各裁 8 至 56 像素时采样点恒为原图的固定两处。这一改动使真相位在粗筛阶段的命中率回到可用水平，具体数字见第 5.4 节。
   </p>
 
-<svg class="figure" viewBox="0 0 840 340" role="img" aria-labelledby="figb-title figb-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 868 368" role="img" aria-labelledby="figb-title figb-desc" preserveAspectRatio="xMidYMid meet">
   <title id="figb-title">插图 裁切后的网格相位重同步</title>
   <desc id="figb-desc">裁切使区块网格原点平移，解码端按原网格切分会每一刀都错开；相位搜索按 8 像素步长枚举 63 种原点，用校验通过率挑选正确相位，实测四边各裁 8、16、32 像素时均命中 (56,56)、(48,48)、(32,32) 并恢复成功。</desc>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
@@ -856,7 +862,7 @@
     模块级验收测试共 111 项，全部通过：DCT 内核 17 项、几何标定 20 项、端到端整合 38 项、纠删码 15 项、数据包 9 项、图像工具 12 项。浏览器端 36 项用例在干跑中 35 项通过，唯一失败项为 T30，其现象与根因记录于第 7.1 节。模块级与浏览器级两组数据互为交叉验证，任何一组出现偏差都会在提交前暴露。
   </p>
 
-<svg class="figure" viewBox="0 0 800 400" role="img" aria-labelledby="fig6-title fig6-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 828 428" role="img" aria-labelledby="fig6-title fig6-desc" preserveAspectRatio="xMidYMid meet">
   <title id="fig6-title">图 6 36 项测试结果</title>
   <desc id="fig6-desc">浏览器端 36 项端到端用例的分组结果：baseline 7/7、blackout 5/5、crop 4/4、watermark 4/4、capacity 5/5、resync 10/11，合计 35 通过 / 1 失败，失败项为 T30（仅嵌标尺 + 缩放 0.75× 时读回 513×513）。</desc>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
@@ -892,8 +898,6 @@
     <text x="461" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">watermark</text>
     <text x="581" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">capacity</text>
     <text x="701" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">resync</text>
-    <path d="M732 90H700V74" fill="none" stroke="#fbbf24" stroke-dasharray="4 3"/>
-    <text x="704" y="72" font-size="11.5" fill="#fbbf24">resync 组 1 项失败：T30</text>
     <text x="8" y="312" font-size="12" fill="#fbbf24">合计 36 项：通过 35，失败 1（失败项 T30）</text>
     <text x="8" y="332" font-size="11" fill="#97a3b6">分组构成：baseline 7（T1~T7）· blackout 5（T8~T12）· crop 4（T13~T16）</text>
     <text x="8" y="350" font-size="11" fill="#97a3b6">watermark 4（T17~T20）· capacity 5（T21~T25）· resync 11（T26~T36）</text>
@@ -989,7 +993,7 @@
     为区分“写坏”与“从未写入”，脚本重建了全部 422 个候选载荷并计算汉明距离。距离为 0 的完好块有 309 个，恰好等于提取端上报的有效块数；距离为 1 至 60 的写过但损坏块有 113 个，其汉明距离最小 1、25 分位 1、中位 3、75 分位 5、最大 16；距离大于 60 的 562 个从未写入。113 个损坏块一共翻转 397 个比特。
   </p>
 
-<svg class="figure" viewBox="0 0 840 345" role="img" aria-labelledby="figc-title figc-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 868 373" role="img" aria-labelledby="figc-title figc-desc" preserveAspectRatio="xMidYMid meet">
   <title id="figc-title">插图 真实隐写图的汉明距离指纹</title>
   <desc id="figc-desc">真实图 2649×1582 的 422 个候选载荷中，汉明距离为 0 的完好块 309 个、距离 1 至 5 的轻微损坏块 113 个、距离大于 60 的从未写入块 562 个；换成 JPEG 替身后 q=98 的损坏分布与 fixture 自身几乎逐格吻合，说明损失来自载体历史压缩。</desc>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
@@ -1102,25 +1106,29 @@
     实测的边际收益决定默认值。裕量从 2 提到自适应区间，改动量 MSE 从 244.463 升到 379.610，质量 75 正确率从 71.875% 升到 99.479%，这笔交换在抗压缩目标下成立。系数对数从 6 对降到 4 对，每区块比特数从 384 降到 256，换来 0.5× 缩放下存活率从 0% 到 72% 至 80%。冗余档位从紧凑换到标准，容量减少 40%，换来抗损坏比例从 20% 升到 50%，三组数字共同说明默认档位是把资源优先分配给鲁棒性的一侧；容量与抗损坏的兑换比例随载体规模变化，因此默认值只固定兑换的优先级而不是固定容量数值。
   </p>
 
-<svg class="figure" viewBox="0 0 820 345" role="img" aria-labelledby="figd-title figd-desc" preserveAspectRatio="xMidYMid meet">
+<svg class="figure" viewBox="-14 -14 820 402" role="img" aria-labelledby="figd-title figd-desc" preserveAspectRatio="xMidYMid meet">
   <title id="figd-title">插图 容量—鲁棒—隐蔽三方权衡</title>
   <desc id="figd-desc">容量、鲁棒与隐蔽三个目标构成一个三角形，默认档位落在三角中部而非任何一个顶点；裕量 8 至 32 使 MSE 从 244.463 升到 379.610 而 Q75 正确率从 71.875% 升到 99.479%，系数对 6 降至 4 使每区块 384 降到 256 比特，冗余从紧凑换到标准使容量从 30.0 KB 降到 18.7 KB 而抗损坏从 20% 升到 50%。</desc>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <!-- 纵向分区（第一版的毛病：分隔线在 y=238，而三角底边在 y=290、顶点标签在
+         y=306/326，于是三条说明文字直接压在三角形与顶点标签上）：
+           标题 26 ｜ 三角形 52~250 ｜ 顶点标签 268/290 ｜ 分隔线 312 ｜ 说明 334~374
+         三角形整体上移 40 单位、说明整体下移 34 单位，两者不再交叠；
+         重复的两处"默认档位"合并为一处，居中放在内三角下方。 -->
     <text x="8" y="26" font-size="12.5">三方权衡示意（默认档位位于三角中部，而非某个顶点）</text>
-    <path d="M400 52L150 290H650Z" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
-    <path d="M400 145L300 212H500Z" fill="#fbbf24" fill-opacity="0.18" stroke="#fbbf24"/>
-    <circle cx="400" cy="190" r="4" fill="#fbbf24"/>
+    <path d="M400 52L150 250H650Z" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
+    <path d="M400 140L305 205H495Z" fill="#fbbf24" fill-opacity="0.18" stroke="#fbbf24"/>
+    <circle cx="400" cy="186" r="4" fill="#fbbf24"/>
     <text x="400" y="84" text-anchor="middle" font-size="12" fill="#fbbf24">隐蔽性更高</text>
-    <text x="352" y="200" text-anchor="middle" font-size="11.5" fill="#fbbf24">默认档位</text>
-    <text x="150" y="306" text-anchor="middle" font-size="11.5" fill="#97a3b6">更小改动量</text>
-    <text x="650" y="306" text-anchor="middle" font-size="11.5" fill="#97a3b6">更强抗损坏</text>
-    <text x="150" y="326" text-anchor="middle" font-size="11.5" fill="#97a3b6">容量更大（每区块比特数）</text>
-    <text x="400" y="216" text-anchor="middle" font-size="11.5" fill="#fbbf24">默认档位</text>
-    <text x="650" y="326" text-anchor="middle" font-size="11.5" fill="#97a3b6">更抗破坏（可容忍丢失比例）</text>
-    <line x1="20" y1="238" x2="800" y2="238" stroke="#7dd3fc" stroke-opacity="0.2"/>
-    <text x="8" y="260" font-size="11.5" fill="#97a3b6">裕量 8 → 32：改动量 MSE 244.463 → 379.610，Q75 正确率 71.875% → 99.479%</text>
-    <text x="8" y="280" font-size="11.5" fill="#97a3b6">系数对 6 → 4：每区块 384 → 256 比特，0.5× 缩放存活率 0% → 72% 至 80%</text>
-    <text x="8" y="300" font-size="11.5" fill="#97a3b6">冗余 紧凑 → 标准：容量 30.0 KB → 18.7 KB，抗损坏 20% → 50%（默认取最稳的一侧）</text>
+    <text x="400" y="226" text-anchor="middle" font-size="11.5" fill="#fbbf24">默认档位</text>
+    <text x="150" y="268" text-anchor="middle" font-size="11.5" fill="#97a3b6">更小改动量</text>
+    <text x="650" y="268" text-anchor="middle" font-size="11.5" fill="#97a3b6">更强抗损坏</text>
+    <text x="150" y="290" text-anchor="middle" font-size="11.5" fill="#97a3b6">容量更大（每区块比特数）</text>
+    <text x="650" y="290" text-anchor="middle" font-size="11.5" fill="#97a3b6">更抗破坏（可容忍丢失比例）</text>
+    <line x1="20" y1="312" x2="792" y2="312" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="8" y="334" font-size="11.5" fill="#97a3b6">裕量 8 → 32：改动量 MSE 244.463 → 379.610，Q75 正确率 71.875% → 99.479%</text>
+    <text x="8" y="354" font-size="11.5" fill="#97a3b6">系数对 6 → 4：每区块 384 → 256 比特，0.5× 缩放存活率 0% → 72% 至 80%</text>
+    <text x="8" y="374" font-size="11.5" fill="#97a3b6">冗余 紧凑 → 标准：容量 30.0 KB → 18.7 KB，抗损坏 20% → 50%（默认取最稳的一侧）</text>
   </g>
 </svg>
 <p class="caption">插图：容量、鲁棒与隐蔽的三方权衡。三角形的三个顶点分别对应隐蔽性、容量与抗破坏三个方向，默认档位落在三角中部而不是任何一个顶点。下方列出裕量、系数对数与冗余档位三个旋钮的实测影响区间。</p>

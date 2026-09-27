@@ -1,0 +1,448 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>SVG 几何体检</title>
+<style>
+  body { margin: 0; background: #0f172a; color: #e6e9ef; font: 14px system-ui, "Microsoft YaHei", sans-serif; padding: 12px; }
+  .probe { width: 1280px; margin: 0 auto 26px; background: #111c33; padding: 6px; box-sizing: border-box; }
+  .probe svg.fig { width: 1280px; height: auto; display: block; }
+  .lbl { color: #7dd3fc; font-size: 13px; margin: 2px 0 6px; }
+</style></head><body>
+<div class="probe"><div class="lbl">figa-lsb</div><svg class="fig" viewBox="-14 -14 848 368" role="img" aria-labelledby="figa-title figa-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="figa-title">插图 最低有效位（LSB）在 JPEG 重编码下失效</title>
+  <desc id="figa-desc">把 262144 个比特写入图像最低位后经 JPEG 重编码读回，质量 95、90、75 三档的正确率分别为 49.89%、49.95%、50.08%，均等于随机猜测；同一条件下本方法的 DCT 差分调制在质量 75 读到 99.48%，而固定裕量取 2 时只有 71.88%。</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <text x="8" y="26" font-size="12.5">最低有效位写入 → JPEG 重编码 → 读回正确率（262144 比特，照片载体）</text>
+    <text x="8" y="58" font-size="11.5" fill="#97a3b6">原像素　178 = 1 0 1 1 0 0 1 0</text>
+    <text x="8" y="78" font-size="11.5" fill="#97a3b6">写 1 →　179 = 1 0 1 1 0 0 1 1　　改动幅度仅 1 个灰度级</text>
+    <text x="8" y="98" font-size="11.5" fill="#fbbf24">但 JPEG 逆变换的取整误差同样是 ±1 个灰度级 → 最低位被整体覆盖</text>
+    <text x="8" y="130" font-size="12" fill="#97a3b6">LSB 写入后按不同质量读回</text>
+    <line x1="110" y1="150" x2="110" y2="240" stroke="#7dd3fc" stroke-opacity="0.4"/>
+    <line x1="260" y1="150" x2="260" y2="240" stroke="#7dd3fc" stroke-opacity="0.25" stroke-dasharray="4 3"/>
+    <text x="264" y="146" font-size="10.5" fill="#fbbf24">50% = 随机猜测</text>
+    <rect x="110" y="158" width="150" height="14" rx="3" fill="#7dd3fc" fill-opacity="0.3" stroke="#7dd3fc"/>
+    <text x="102" y="170" text-anchor="end" font-size="11" fill="#97a3b6">q=95</text>
+    <text x="268" y="170" font-size="11" fill="#7dd3fc">49.89%</text>
+    <rect x="110" y="184" width="150" height="14" rx="3" fill="#7dd3fc" fill-opacity="0.3" stroke="#7dd3fc"/>
+    <text x="102" y="196" text-anchor="end" font-size="11" fill="#97a3b6">q=90</text>
+    <text x="268" y="196" font-size="11" fill="#7dd3fc">49.95%</text>
+    <rect x="110" y="210" width="150" height="14" rx="3" fill="#7dd3fc" fill-opacity="0.3" stroke="#7dd3fc"/>
+    <text x="102" y="222" text-anchor="end" font-size="11" fill="#97a3b6">q=75</text>
+    <text x="268" y="222" font-size="11" fill="#7dd3fc">50.08%</text>
+    <rect x="110" y="236" width="298" height="14" rx="3" fill="#fbbf24" fill-opacity="0.45" stroke="#fbbf24"/>
+    <text x="102" y="248" text-anchor="end" font-size="11" fill="#97a3b6">本方法 q=75</text>
+    <text x="416" y="248" font-size="11" fill="#fbbf24">99.48%</text>
+    <line x1="0" y1="258" x2="820" y2="258" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="8" y="282" font-size="12" fill="#97a3b6">对照 · 本方法（DCT 差分调制，一个 64×64 区块承载 384 比特）</text>
+    <text x="8" y="304" font-size="11.5" fill="#fbbf24">自适应裕量 q=75 正确率 99.48%；同一条件下固定裕量取 2 只有 71.88%</text>
+    <text x="8" y="326" font-size="11.5" fill="#97a3b6">结论：提高压缩质量救不回最低位，像素域不存在抗量化的承载位置。</text>
+  </g>
+</svg></div>
+<div class="probe"><div class="lbl">fig1-architecture</div><svg class="fig" viewBox="-14 -14 1088 428" role="img" aria-labelledby="fig1-title fig1-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="fig1-title">图 1 系统架构</title>
+  <desc id="fig1-desc">载体图与秘密图经嵌入端完成分块选块、DCT 差分调制、纠删编码与标尺叠加，输出隐写图 PNG；经过要求无损的文件级信道后，提取端依次尝试常规提取、相位搜索与尺度标定加干扰对消三条路径，最终还原秘密图。</desc>
+  <defs>
+    <marker id="fig1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#7dd3fc"/>
+    </marker>
+  </defs>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <!-- 几何约定：两个"端"框的宽度按**框内最长文字**反推，而不是凭感觉给。
+         嵌入端最长行 "标尺叠加：导频 32 / 16 + 扩频码" 在 11 号字下约 182 单位，
+         加左右内边距后取框宽 215；提取端最长行
+         "① 常规 (0,0) 相位，先 6 对后 4 对，CRC 判定" 约 254 单位，取框宽 290。
+         第一版两框只有 160 / 150，文字直接溢出到框外（用户报告的问题 1）；
+         这里把框加宽、右列整体右移，viewBox 由 920 扩到 1060。 -->
+    <rect x="20" y="44" width="120" height="44" rx="8" fill="none" stroke="#7dd3fc"/>
+    <text x="80" y="71" text-anchor="middle">载体图</text>
+    <rect x="20" y="122" width="120" height="44" rx="8" fill="none" stroke="#7dd3fc"/>
+    <text x="80" y="149" text-anchor="middle">秘密图</text>
+    <rect x="200" y="44" width="215" height="122" rx="10" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
+    <text x="307" y="63" text-anchor="middle" fill="#97a3b6" font-size="12">嵌入端</text>
+    <text x="214" y="84" font-size="11">选块 64×64 / 安全块筛选</text>
+    <text x="214" y="102" font-size="11">DCT 差分符号调制 + 自适应裕量</text>
+    <text x="214" y="120" font-size="11">RS 纠删编码（GF(2^16)）</text>
+    <text x="214" y="138" font-size="11">标尺叠加：导频 32 / 16 + 扩频码</text>
+    <text x="307" y="178" text-anchor="middle" fill="#97a3b6" font-size="11.5">14 字节头 + 48 字节载荷 + K/N</text>
+    <rect x="450" y="44" width="120" height="44" rx="8" fill="none" stroke="#7dd3fc"/>
+    <text x="510" y="71" text-anchor="middle">隐写图 PNG</text>
+    <text x="660" y="62" text-anchor="middle" fill="#97a3b6" font-size="11.5">信道：原图 / 文件级无损传输</text>
+    <text x="660" y="78" text-anchor="middle" fill="#97a3b6" font-size="11.5">（普通发送会重编码 → 失效）</text>
+    <rect x="750" y="44" width="290" height="260" rx="10" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
+    <text x="895" y="63" text-anchor="middle" fill="#97a3b6" font-size="12">提取端</text>
+    <text x="764" y="86" font-size="11">① 常规 (0,0) 相位，先 6 对后 4 对，CRC 判定</text>
+    <text x="764" y="104" font-size="11">② 相位 8 px 步长枚举 63 个原点</text>
+    <text x="764" y="122" font-size="11">③ 尺度 导频量倍率 → α/z 双判据</text>
+    <text x="764" y="140" font-size="11">→ 重采样回原尺寸 → 干扰对消 → 再提取</text>
+    <text x="764" y="158" font-size="11">④ 失败 返回 debugMask 与两条路径读数</text>
+    <rect x="750" y="322" width="290" height="44" rx="8" fill="none" stroke="#fbbf24"/>
+    <text x="895" y="349" text-anchor="middle" fill="#fbbf24">还原的秘密图</text>
+    <path d="M140 66H200" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
+    <path d="M140 144H170V160" fill="none" stroke="#7dd3fc"/>
+    <path d="M170 160H200" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
+    <path d="M415 108H450" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
+    <path d="M570 66H750" fill="none" stroke="#7dd3fc" marker-end="url(#fig1-arrow)"/>
+    <path d="M895 304V322" fill="none" stroke="#fbbf24" marker-end="url(#fig1-arrow)"/>
+  </g>
+</svg></div>
+<div class="probe"><div class="lbl">fig2-dct-modulation</div><svg class="fig" viewBox="-14 -14 928 368" role="img" aria-labelledby="fig2-title fig2-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="fig2-title">图 2 DCT 差分调制</title>
+  <desc id="fig2-desc">一个 8×8 DCT 系数块的示意：实心高亮为 (2,1)-(1,2) 与 (0,3)-(3,0) 等配对系数位置，虚框为另一组配对位置；比特由一对系数的大小关系决定，a 大于 b 判为 1，b 大于 a 判为 0，而两系数的中值 mid 等于 a 加 b 的一半保持不变。</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <text x="20" y="30" font-size="12.5">8×8 DCT 系数块 · 配对系数位置（索引 index = 8v + u）</text>
+    <path d="M20 56V312M52 56V312M84 56V312M116 56V312M148 56V312M180 56V312M212 56V312M244 56V312M276 56V312M20 56H276M20 88H276M20 120H276M20 152H276M20 184H276M20 216H276M20 248H276M20 280H276M20 312H276" fill="none" stroke="#7dd3fc" stroke-opacity="0.35"/>
+    <rect x="117" y="57" width="30" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#fbbf24" stroke-width="1.6"/>
+    <text x="132" y="76" text-anchor="middle" font-size="10.5" fill="#0f1319">0,3</text>
+    <rect x="85" y="89" width="30" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#fbbf24" stroke-width="1.6"/>
+    <text x="100" y="108" text-anchor="middle" font-size="10.5" fill="#0f1319">1,2</text>
+    <rect x="53" y="121" width="30" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#fbbf24" stroke-width="1.6"/>
+    <text x="68" y="140" text-anchor="middle" font-size="10.5" fill="#0f1319">2,1</text>
+    <rect x="21" y="153" width="30" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#fbbf24" stroke-width="1.6"/>
+    <text x="36" y="172" text-anchor="middle" font-size="10.5" fill="#0f1319">3,0</text>
+    <rect x="149" y="89" width="30" height="30" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <text x="164" y="108" text-anchor="middle" font-size="10.5" fill="#fbbf24">1,4</text>
+    <rect x="117" y="121" width="30" height="30" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <text x="132" y="140" text-anchor="middle" font-size="10.5" fill="#fbbf24">2,3</text>
+    <rect x="85" y="153" width="30" height="30" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <text x="100" y="172" text-anchor="middle" font-size="10.5" fill="#fbbf24">3,2</text>
+    <rect x="53" y="185" width="30" height="30" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <text x="68" y="204" text-anchor="middle" font-size="10.5" fill="#fbbf24">4,1</text>
+    <text x="148" y="330" text-anchor="middle" font-size="10.5" fill="#97a3b6">u →（列）　v ↓（行）　DC 位于 (0,0)</text>
+    <text x="310" y="86" font-size="12.5" fill="#fbbf24">比特 = 一对系数的大小关系（a, b 为配对系数）</text>
+    <text x="310" y="108" font-size="12">a &gt; b → 1　　　b &gt; a → 0　　　mid = (a + b) / 2 不变</text>
+    <text x="310" y="146" font-size="11.5" fill="#97a3b6">写 1：(2,1) 系数抬到 +12，(1,2) 压到 +4</text>
+    <rect x="400" y="158" width="72" height="16" rx="3" fill="#7dd3fc" fill-opacity="0.45" stroke="#7dd3fc"/>
+    <text x="482" y="171" font-size="10.5">+12</text>
+    <rect x="510" y="158" width="24" height="16" rx="3" fill="#fbbf24" fill-opacity="0.45" stroke="#fbbf24"/>
+    <text x="544" y="171" font-size="10.5">+4</text>
+    <text x="310" y="200" font-size="11.5" fill="#97a3b6">写 0：(2,1) 压到 +4，(1,2) 抬到 +12（符号翻转）</text>
+    <rect x="400" y="212" width="24" height="16" rx="3" fill="#7dd3fc" fill-opacity="0.45" stroke="#7dd3fc"/>
+    <text x="434" y="225" font-size="10.5">+4</text>
+    <rect x="510" y="212" width="72" height="16" rx="3" fill="#fbbf24" fill-opacity="0.45" stroke="#fbbf24"/>
+    <text x="592" y="225" font-size="10.5">+12</text>
+    <text x="310" y="256" font-size="11" fill="#97a3b6">和 mid 恒定 → 区块直流能量不变，视觉扰动被限制在这一对系数之间</text>
+    <text x="310" y="276" font-size="11" fill="#97a3b6">Q75 步长 7：原始差 12 ≈ 1.7 步长，取整噪声 ±1 步长 → 符号保住</text>
+    <text x="310" y="296" font-size="11" fill="#97a3b6">原始差 2 ≈ 0.29 步长，噪声 ±1 步长 → 符号靠猜</text>
+    <text x="310" y="322" font-size="11" fill="#fbbf24">实心 = 高亮配对 (2,1)-(1,2) 与 (0,3)-(3,0)　虚线 = 其余配对</text>
+  </g>
+</svg></div>
+<div class="probe"><div class="lbl">fig3-redundancy</div><svg class="fig" viewBox="-14 -14 788 348" role="img" aria-labelledby="fig3-title fig3-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="fig3-title">图 3 N = 2K 冗余关系</title>
+  <desc id="fig3-desc">K 个源符号经 GF(2^16) 系统化 Reed-Solomon 编码成为 N 等于 2K 个符号，前 K 个即原始分片；任意收到不少于 K 个符号即可解码，因此理论边界为可容忍 50% 符号丢失，而面积遮挡下的实测稳定区间只有 25% 至 35%。</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <text x="60" y="48" font-size="12">源数据 K 份 · 每份 40 字节</text>
+    <rect x="126" y="60" width="164" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="208" y="80" text-anchor="middle" font-size="11" fill="#0f1319">1 … K（K 份源分片）</text>
+    <path d="M278 90V112" fill="none" stroke="#7dd3fc" stroke-dasharray="4 3"/>
+    <text x="286" y="108" font-size="11" fill="#97a3b6">系统化 RS 编码（前 K 份零运算）</text>
+    <text x="60" y="142" font-size="12">编码符号 N = 2K 份 · 48 字节 / 符号</text>
+    <text x="12" y="174" font-size="11" fill="#97a3b6">符号</text>
+    <rect x="92" y="154" width="42" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="113" y="174" text-anchor="middle" font-size="11" fill="#0f1319">1</text>
+    <rect x="134" y="154" width="42" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="155" y="174" text-anchor="middle" font-size="11" fill="#0f1319">2</text>
+    <rect x="176" y="154" width="42" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="197" y="174" text-anchor="middle" font-size="11" fill="#0f1319">3</text>
+    <rect x="218" y="154" width="42" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="239" y="174" text-anchor="middle" font-size="11" fill="#0f1319">…</text>
+    <rect x="260" y="154" width="42" height="30" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="281" y="174" text-anchor="middle" font-size="11" fill="#0f1319">K</text>
+    <rect x="302" y="154" width="42" height="30" fill="none" fill-opacity="1" stroke="#7dd3fc"/>
+    <text x="323" y="174" text-anchor="middle" font-size="11" fill="#7dd3fc">K+1</text>
+    <rect x="344" y="154" width="42" height="30" fill="none" fill-opacity="1" stroke="#7dd3fc"/>
+    <text x="365" y="174" text-anchor="middle" font-size="11" fill="#7dd3fc">…</text>
+    <rect x="386" y="154" width="42" height="30" fill="none" fill-opacity="1" stroke="#7dd3fc"/>
+    <text x="407" y="174" text-anchor="middle" font-size="11" fill="#7dd3fc">N</text>
+    <text x="470" y="168" font-size="12" fill="#fbbf24">系统化：前 K 份 = 原始分片</text>
+    <text x="470" y="188" font-size="12" fill="#fbbf24">任意收到 ≥ K 份即可解码</text>
+    <line x1="40" y1="218" x2="720" y2="218" stroke="#7dd3fc" stroke-opacity="0.25"/>
+    <text x="40" y="244" font-size="12">理论边界 50%　</text>
+    <rect x="126" y="232" width="264" height="14" rx="3" fill="none" stroke="#7dd3fc" stroke-opacity="0.6"/>
+    <rect x="126" y="232" width="132" height="14" rx="3" fill="#7dd3fc" fill-opacity="0.3" stroke="#7dd3fc"/>
+    <text x="400" y="244" font-size="11.5" fill="#97a3b6">任意丢一半符号仍可解（N = 2K 的理论极限）</text>
+    <text x="40" y="276" font-size="12">实测稳定 25~35%</text>
+    <rect x="126" y="264" width="264" height="14" rx="3" fill="none" stroke="#7dd3fc" stroke-opacity="0.6"/>
+    <rect x="192" y="264" width="53" height="14" rx="3" fill="#fbbf24" fill-opacity="0.8"/>
+    <text x="400" y="276" font-size="11.5" fill="#97a3b6">面积遮挡 25% 至 35% 稳定，超过即随空间分布波动</text>
+    <text x="40" y="308" font-size="11" fill="#97a3b6">K 写在每个 48 字节载荷的前两字节，提取端做多数表决即可，无需事先约定冗余档位。</text>
+  </g>
+</svg></div>
+<div class="probe"><div class="lbl">fig4-quadrant</div><svg class="fig" viewBox="-14 -14 988 348" role="img" aria-labelledby="fig4-title fig4-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="fig4-title">图 4 四象限棋盘配额</title>
+  <desc id="fig4-desc">4×4 方格网格把承载块分成四个象限：左上与右下各 a 个，右上与左下各 b 个，且 a 加 b 等于 K，因此左、右、上、下四个半平面各自恰好 K 个符号，任一方向被遮挡一半面积时仍可解码。</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <rect x="40" y="40" width="60" height="60" fill="#fbbf24" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="100" y="40" width="60" height="60" fill="#fbbf24" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="160" y="40" width="60" height="60" fill="#7dd3fc" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="220" y="40" width="60" height="60" fill="#7dd3fc" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="40" y="100" width="60" height="60" fill="#fbbf24" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="100" y="100" width="60" height="60" fill="#fbbf24" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="160" y="100" width="60" height="60" fill="#7dd3fc" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="220" y="100" width="60" height="60" fill="#7dd3fc" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="40" y="160" width="60" height="60" fill="#7dd3fc" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="100" y="160" width="60" height="60" fill="#7dd3fc" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="160" y="160" width="60" height="60" fill="#fbbf24" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="220" y="160" width="60" height="60" fill="#fbbf24" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="40" y="220" width="60" height="60" fill="#7dd3fc" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="100" y="220" width="60" height="60" fill="#7dd3fc" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="160" y="220" width="60" height="60" fill="#fbbf24" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <rect x="220" y="220" width="60" height="60" fill="#fbbf24" fill-opacity="0.16" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <text x="160" y="34" text-anchor="middle" font-size="12" fill="#fbbf24">左上 a 个</text>
+    <text x="280" y="34" text-anchor="middle" font-size="12">右上 b 个</text>
+    <text x="160" y="296" text-anchor="middle" font-size="12">左下 b 个</text>
+    <text x="280" y="296" text-anchor="middle" font-size="12" fill="#fbbf24">右下 a 个</text>
+    <text x="160" y="318" text-anchor="middle" font-size="11.5" fill="#97a3b6">a + b = K</text>
+    <text x="360" y="60" font-size="12.5">左上 = 右下 = a　右上 = 左下 = b　a + b = K</text>
+    <text x="360" y="86" font-size="12.5" fill="#fbbf24">左 / 右 / 上 / 下四个半平面各恰好 K 个符号</text>
+    <text x="360" y="120" font-size="11.5" fill="#97a3b6">对照 · 顺序铺开（scan）：2048×2048 图上 130 个符号只占最上面 5 行，</text>
+    <text x="360" y="140" font-size="11.5" fill="#97a3b6">涂黑左上角一半面积即丢失过半符号，解码失败。</text>
+    <text x="360" y="174" font-size="11.5" fill="#97a3b6">实测 · 涂黑下半张图：顺序铺开 62 个符号存活 0 个；</text>
+    <text x="360" y="194" font-size="11.5" fill="#97a3b6">棋盘配额下 31 个符号存活，恰好等于 K = 31，还原成功。</text>
+    <text x="360" y="228" font-size="11.5" fill="#97a3b6">实测 · 涂黑左半：spread 读出 31 块 success = true；</text>
+    <text x="360" y="248" font-size="11.5" fill="#97a3b6">scan 读出 30 块 success = false。</text>
+    <text x="360" y="284" font-size="11.5" fill="#fbbf24">黄色填充象限 = a 桶，蓝色填充象限 = b 桶</text>
+  </g>
+</svg></div>
+<div class="probe"><div class="lbl">fig5-pilot</div><svg class="fig" viewBox="-14 -14 828 388" role="img" aria-labelledby="fig5-title fig5-desc" preserveAspectRatio="xMidYMid meet">
+<title id="fig5-title">图 5 双导频波形</title>
+<desc id="fig5-desc">两条沿对角线 d = x + y 的正弦导频，周期分别为 32 与 16 像素，振幅均为 1.2，构成 2:1 频率比。</desc>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+<text x="8" y="18" font-size="12">周期 32 px · 振幅 1.2</text>
+<path d="M60 30H700M60 86H700M60 142H700" stroke="#7dd3fc" stroke-opacity="0.35" fill="none"/>
+<path d="M60 86H700" stroke="#7dd3fc" stroke-opacity="0.5" stroke-dasharray="5 4" fill="none"/>
+<text x="704" y="38" font-size="10.5" fill="#97a3b6">+1.2</text>
+<text x="704" y="90" font-size="10.5" fill="#97a3b6">0.0</text>
+<text x="704" y="146" font-size="10.5" fill="#97a3b6">−1.2</text>
+<polyline points="60,46.4 65.3,31.9 70.7,71.5 76,125.6 81.3,140.1 86.7,100.5 92,46.4 97.3,31.9 102.7,71.5 108,125.6 113.3,140.1 118.7,100.5 124,46.4 129.3,31.9 134.7,71.5 140,125.6 145.3,140.1 150.7,100.5 156,46.4 161.3,31.9 166.7,71.5 172,125.6 177.3,140.1 182.7,100.5 188,46.4 193.3,31.9 198.7,71.5 204,125.6 209.3,140.1 214.7,100.5 220,46.4 225.3,31.9 230.7,71.5 236,125.6 241.3,140.1 246.7,100.5 252,46.4 257.3,31.9 262.7,71.5 268,125.6 273.3,140.1 278.7,100.5 284,46.4 289.3,31.9 294.7,71.5 300,125.6 305.3,140.1 310.7,100.5 316,46.4 321.3,31.9 326.7,71.5 332,125.6 337.3,140.1 342.7,100.5 348,46.4 353.3,31.9 358.7,71.5 364,125.6 369.3,140.1 374.7,100.5 380,46.4 385.3,31.9 390.7,71.5 396,125.6 401.3,140.1 406.7,100.5 412,46.4 417.3,31.9 422.7,71.5 428,125.6 433.3,140.1 438.7,100.5 444,46.4 449.3,31.9 454.7,71.5 460,125.6 465.3,140.1 470.7,100.5 476,46.4 481.3,31.9 486.7,71.5 492,125.6 497.3,140.1 502.7,100.5 508,46.4 513.3,31.9 518.7,71.5 524,125.6 529.3,140.1 534.7,100.5 540,46.4 545.3,31.9 550.7,71.5 556,125.6 561.3,140.1 566.7,100.5 572,46.4 577.3,31.9 582.7,71.5 588,125.6 593.3,140.1 598.7,100.5 604,46.4 609.3,31.9 614.7,71.5 620,125.6 625.3,140.1 630.7,100.5 636,46.4 641.3,31.9 646.7,71.5 652,125.6 657.3,140.1 662.7,100.5 668,46.4 673.3,31.9 678.7,71.5 684,125.6 689.3,140.1 694.7,100.5 700,46.4" fill="none" stroke="#fbbf24" stroke-width="1.8"/>
+<text x="8" y="172" font-size="12">周期 16 px · 振幅 1.2 · 2:1 频率比</text>
+<path d="M60 186H700M60 230H700M60 274H700" stroke="#7dd3fc" stroke-opacity="0.35" fill="none"/>
+<path d="M60 230H700" stroke="#7dd3fc" stroke-opacity="0.5" stroke-dasharray="5 4" fill="none"/>
+<text x="704" y="194" font-size="10.5" fill="#97a3b6">+1.2</text>
+<text x="704" y="234" font-size="10.5" fill="#97a3b6">0.0</text>
+<text x="704" y="278" font-size="10.5" fill="#97a3b6">−1.2</text>
+<polyline points="60,230 64,174 68,230 72,286 76,230 80,174 84,230 88,286 92,230 96,174 100,230 104,286 108,230 112,174 116,230 120,286 124,230 128,174 132,230 136,286 140,230 144,174 148,230 152,286 156,230 160,174 164,230 168,286 172,230 176,174 180,230 184,286 188,230 192,174 196,230 200,286 204,230 208,174 212,230 216,286 220,230 224,174 228,230 232,286 236,230 240,174 244,230 248,286 252,230 256,174 260,230 264,286 268,230 272,174 276,230 280,286 284,230 288,174 292,230 296,286 300,230 304,174 308,230 312,286 316,230 320,174 324,230 328,286 332,230 336,174 340,230 344,286 348,230 352,174 356,230 360,286 364,230 368,174 372,230 376,286 380,230 384,174 388,230 392,286 396,230 400,174 404,230 408,286 412,230 416,174 420,230 424,286 428,230 432,174 436,230 440,286 444,230 448,174 452,230 456,286 460,230 464,174 468,230 472,286 476,230 480,174 484,230 488,286 492,230 496,174 500,230 504,286 508,230 512,174 516,230 520,286 524,230 528,174 532,230 536,286 540,230 544,174 548,230 552,286 556,230 560,174 564,230 568,286 572,230 576,174 580,230 584,286 588,230 592,174 596,230 600,286 604,230 608,174 612,230 616,286 620,230 624,174 628,230 632,286 636,230 640,174 644,230 648,286 652,230 656,174 660,230 664,286 668,230 672,174 676,230 680,286 684,230 688,174 692,230 696,286 700,230" fill="none" stroke="#fbbf24" stroke-width="1.8"/>
+<text x="8" y="342" font-size="11" fill="#97a3b6">横轴：d = x + y（像素）</text>
+<text x="700" y="342" text-anchor="end" font-size="11" fill="#fbbf24">另叠加 288 片 ±1 扩频码（振幅 1.0）</text>
+<path d="M60 26V316M140 26V316M220 26V316M300 26V316M380 26V316M460 26V316M540 26V316M620 26V316M700 26V316" stroke="#7dd3fc" stroke-opacity="0.15" fill="none"/><text x="60" y="322" text-anchor="middle" font-size="10.5" fill="#97a3b6">0</text><text x="220" y="322" text-anchor="middle" font-size="10.5" fill="#97a3b6">16</text><text x="380" y="322" text-anchor="middle" font-size="10.5" fill="#97a3b6">32</text><text x="540" y="322" text-anchor="middle" font-size="10.5" fill="#97a3b6">48</text><text x="700" y="322" text-anchor="middle" font-size="10.5" fill="#97a3b6">64</text>
+</g>
+</svg></div>
+<div class="probe"><div class="lbl">figb-phase-search</div><svg class="fig" viewBox="-14 -14 868 368" role="img" aria-labelledby="figb-title figb-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="figb-title">插图 裁切后的网格相位重同步</title>
+  <desc id="figb-desc">裁切使区块网格原点平移，解码端按原网格切分会每一刀都错开；相位搜索按 8 像素步长枚举 63 种原点，用校验通过率挑选正确相位，实测四边各裁 8、16、32 像素时均命中 (56,56)、(48,48)、(32,32) 并恢复成功。</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <text x="8" y="26" font-size="12.5">裁切导致原点平移，相位搜索按 8 像素步长枚举 63 种原点</text>
+    <text x="20" y="54" font-size="11.5" fill="#97a3b6">原网格</text>
+    <text x="370" y="54" font-size="11.5" fill="#97a3b6">裁掉 32 像素后，真实原点随之平移</text>
+    <line x1="20" y1="66" x2="20" y2="210" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="20" y1="66" x2="164" y2="66" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="56" y1="66" x2="56" y2="210" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="20" y1="102" x2="164" y2="102" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="92" y1="66" x2="92" y2="210" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="20" y1="138" x2="164" y2="138" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="128" y1="66" x2="128" y2="210" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="20" y1="174" x2="164" y2="174" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="164" y1="66" x2="164" y2="210" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="20" y1="210" x2="164" y2="210" stroke="#7dd3fc" stroke-opacity="0.55"/>
+    <line x1="370" y1="66" x2="370" y2="210" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="370" y1="66" x2="514" y2="66" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="406" y1="66" x2="406" y2="210" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="370" y1="102" x2="514" y2="102" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="442" y1="66" x2="442" y2="210" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="370" y1="138" x2="514" y2="138" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="478" y1="66" x2="478" y2="210" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="370" y1="174" x2="514" y2="174" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="514" y1="66" x2="514" y2="210" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <line x1="370" y1="210" x2="514" y2="210" stroke="#fbbf24" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+    <rect x="20" y="66" width="144" height="144" fill="#7dd3fc" fill-opacity="0.07" stroke="#7dd3fc"/>
+    <path d="M190 138H340" fill="none" stroke="#fbbf24" stroke-width="1.6"/>
+    <path d="M330 132L342 138L330 144" fill="none" stroke="#fbbf24" stroke-width="1.6"/>
+    <text x="265" y="130" text-anchor="middle" font-size="11.5" fill="#fbbf24">裁切 32 px</text>
+    <text x="560" y="100" font-size="11.5" fill="#97a3b6">解码端仍按原网格切分 → 每一刀都错开</text>
+    <text x="560" y="122" font-size="11.5" fill="#97a3b6">枚举 63 种原点，用 CRC 校验通过率挑对的</text>
+    <text x="560" y="144" font-size="11.5" fill="#fbbf24">粗探 8 块 → 精探 16 块（阈值 10%）</text>
+    <text x="560" y="166" font-size="11.5" fill="#97a3b6">实现代价 63 倍工作量，两级筛选后可控</text>
+    <line x1="0" y1="228" x2="840" y2="228" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="8" y="250" font-size="11.5" fill="#97a3b6">实测（1024×1024 载体，粗探 8 块 / 精探 16 块）：</text>
+    <text x="8" y="270" font-size="11.5" fill="#97a3b6">四边各裁　8 像素：真相位 (56,56) 精探命中 3/16 → 恢复成功，整轮 651 ms</text>
+    <text x="8" y="288" font-size="11.5" fill="#97a3b6">四边各裁 16 像素：真相位 (48,48) 精探命中 3/16 → 恢复成功，整轮 615 ms</text>
+    <text x="8" y="306" font-size="11.5" fill="#97a3b6">四边各裁 32 像素：真相位 (32,32) 精探命中 3/16 → 恢复成功，整轮 601 ms</text>
+    <text x="8" y="324" font-size="11.5" fill="#97a3b6">未隐写照片 512² 与 1024²：63 个相位全部零命中 → 直接返回，整轮 437 / 671 ms</text>
+    <text x="8" y="340" font-size="11.5" fill="#fbbf24">裁切 7 种偏移 × 3 张纹理载体 = 21/21 通过；1 至 7 像素非 8 倍数平移不在网格上（见 7.1 节）</text>
+  </g>
+</svg></div>
+<div class="probe"><div class="lbl">fig6-test-results</div><svg class="fig" viewBox="-14 -14 828 428" role="img" aria-labelledby="fig6-title fig6-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="fig6-title">图 6 36 项测试结果</title>
+  <desc id="fig6-desc">浏览器端 36 项端到端用例的分组结果：baseline 7/7、blackout 5/5、crop 4/4、watermark 4/4、capacity 5/5、resync 10/11，合计 35 通过 / 1 失败，失败项为 T30（仅嵌标尺 + 缩放 0.75× 时读回 513×513）。</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <text x="8" y="20" font-size="12.5">浏览器端 36 项端到端用例 · 分组通过数 / 用例数</text>
+    <text x="8" y="40" font-size="11" fill="#97a3b6">纵轴 = 通过项数；数据取自 js/test-suite.js 的分组结构与干跑结果</text>
+    <line x1="64" y1="258" x2="736" y2="258" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="58" y="262" text-anchor="end" font-size="10.5" fill="#97a3b6">0</text>
+    <line x1="64" y1="222" x2="736" y2="222" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="58" y="226" text-anchor="end" font-size="10.5" fill="#97a3b6">2</text>
+    <line x1="64" y1="186" x2="736" y2="186" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="58" y="190" text-anchor="end" font-size="10.5" fill="#97a3b6">4</text>
+    <line x1="64" y1="150" x2="736" y2="150" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="58" y="154" text-anchor="end" font-size="10.5" fill="#97a3b6">6</text>
+    <line x1="64" y1="114" x2="736" y2="114" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="58" y="118" text-anchor="end" font-size="10.5" fill="#97a3b6">8</text>
+    <line x1="64" y1="258" x2="736" y2="258" stroke="#7dd3fc" stroke-opacity="0.6"/>
+    <rect x="70" y="132" width="62" height="126" rx="3" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="101" y="125" text-anchor="middle" font-size="11.5" fill="#7dd3fc">7/7</text>
+    <rect x="190" y="168" width="62" height="90" rx="3" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="221" y="161" text-anchor="middle" font-size="11.5" fill="#7dd3fc">5/5</text>
+    <rect x="310" y="186" width="62" height="72" rx="3" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="341" y="179" text-anchor="middle" font-size="11.5" fill="#7dd3fc">4/4</text>
+    <rect x="430" y="186" width="62" height="72" rx="3" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="461" y="179" text-anchor="middle" font-size="11.5" fill="#7dd3fc">4/4</text>
+    <rect x="550" y="168" width="62" height="90" rx="3" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="581" y="161" text-anchor="middle" font-size="11.5" fill="#7dd3fc">5/5</text>
+    <rect x="670" y="78" width="62" height="180" rx="3" fill="#7dd3fc" fill-opacity="0.35" stroke="#7dd3fc"/>
+    <text x="701" y="71" text-anchor="middle" font-size="11.5" fill="#7dd3fc">10/11</text>
+    <rect x="670" y="240" width="62" height="18" fill="#fbbf24" fill-opacity="0.5" stroke="#fbbf24"/>
+    <text x="101" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">baseline</text>
+    <text x="221" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">blackout</text>
+    <text x="341" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">crop</text>
+    <text x="461" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">watermark</text>
+    <text x="581" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">capacity</text>
+    <text x="701" y="280" text-anchor="middle" font-size="11" fill="#97a3b6">resync</text>
+    <text x="8" y="312" font-size="12" fill="#fbbf24">合计 36 项：通过 35，失败 1（失败项 T30）</text>
+    <text x="8" y="332" font-size="11" fill="#97a3b6">分组构成：baseline 7（T1~T7）· blackout 5（T8~T12）· crop 4（T13~T16）</text>
+    <text x="8" y="350" font-size="11" fill="#97a3b6">watermark 4（T17~T20）· capacity 5（T21~T25）· resync 11（T26~T36）</text>
+    <text x="8" y="368" font-size="11" fill="#97a3b6">T30：仅嵌标尺 + 缩放 0.75× → 读回 513×513（期望 512×512），耗时 135.4 ms。总耗时 15702 ms</text>
+    <text x="8" y="388" font-size="11" fill="#97a3b6">黄色叠加段 = resync 组中唯一未通过的那 1 项</text>
+  </g>
+</svg></div>
+<div class="probe"><div class="lbl">figc-hamming</div><svg class="fig" viewBox="-14 -14 868 373" role="img" aria-labelledby="figc-title figc-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="figc-title">插图 真实隐写图的汉明距离指纹</title>
+  <desc id="figc-desc">真实图 2649×1582 的 422 个候选载荷中，汉明距离为 0 的完好块 309 个、距离 1 至 5 的轻微损坏块 113 个、距离大于 60 的从未写入块 562 个；换成 JPEG 替身后 q=98 的损坏分布与 fixture 自身几乎逐格吻合，说明损失来自载体历史压缩。</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <text x="8" y="26" font-size="12.5">真实图 2649×1582（8402 字节载荷，K = 211，N = 422）的汉明距离指纹</text>
+    <rect x="200" y="58" width="294" height="16" rx="3" fill="#7dd3fc" fill-opacity="0.45" stroke="#7dd3fc"/>
+    <text x="192" y="70" text-anchor="end" font-size="11.5" fill="#97a3b6">距离 0（完好）</text>
+    <text x="502" y="70" font-size="11.5" fill="#7dd3fc">309 个</text>
+    <rect x="200" y="88" width="107" height="16" rx="3" fill="#fbbf24" fill-opacity="0.5" stroke="#fbbf24"/>
+    <text x="192" y="100" text-anchor="end" font-size="11.5" fill="#97a3b6">距离 1~5（轻微）</text>
+    <text x="315" y="100" font-size="11.5" fill="#fbbf24">113 个</text>
+    <rect x="200" y="118" width="534" height="16" rx="3" fill="#97a3b6" fill-opacity="0.25" stroke="#97a3b6"/>
+    <text x="192" y="130" text-anchor="end" font-size="11.5" fill="#97a3b6">距离 &gt; 60（从未写入）</text>
+    <text x="742" y="130" font-size="11.5" fill="#97a3b6">562 个</text>
+    <text x="8" y="150" font-size="11.5" fill="#7dd3fc">推断被写入块数 = 309 + 113 = 422，与 N = 422 吻合（113 个损坏块的中位距离为 3 个比特）</text>
+    <line x1="0" y1="166" x2="840" y2="166" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="8" y="188" font-size="11.5" fill="#97a3b6">把同一张图送进 JPEG 替身，再统计损坏块与翻错分布：</text>
+    <text x="8" y="208" font-size="11.5" fill="#97a3b6">替身 q=98：完好 307/422，损坏 115 个，翻错 398 个，按对分布 [128, 21, 68, 160, 18, 3]</text>
+    <text x="8" y="226" font-size="11.5" fill="#97a3b6">替身 q=95：完好 304/422，损坏 118 个，翻错 422 个，按对分布 [129, 29, 72, 166, 22, 4]</text>
+    <text x="8" y="244" font-size="11.5" fill="#97a3b6">fixture 自身：完好 309/422，损坏 113 个，翻错 397 个，按对分布 [127, 24, 70, 157, 16, 3]</text>
+    <text x="8" y="270" font-size="11.5" fill="#fbbf24">逐格对比：fixture 的错误指纹与高质量有损重存（q ≈ 98）几乎完全吻合</text>
+    <text x="8" y="288" font-size="11.5" fill="#97a3b6">而与 q = 95 以下逐渐分离 → 损失根因在载体自身的历史压缩，而非嵌入流程</text>
+    <text x="8" y="316" font-size="11.5" fill="#97a3b6">按安全块判据重新嵌入后，同一张图同一份载荷的零遮蔽存活率从 66.8% 提升到 83.2%</text>
+    <text x="8" y="336" font-size="11.5" fill="#97a3b6">黄色 = 轻微损坏块（1 至 5 个比特），蓝色 = 完好块，灰色 = 从未写入块</text>
+  </g>
+</svg></div>
+<div class="probe"><div class="lbl">figd-tradeoff</div><svg class="fig" viewBox="-14 -14 820 402" role="img" aria-labelledby="figd-title figd-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="figd-title">插图 容量—鲁棒—隐蔽三方权衡</title>
+  <desc id="figd-desc">容量、鲁棒与隐蔽三个目标构成一个三角形，默认档位落在三角中部而非任何一个顶点；裕量 8 至 32 使 MSE 从 244.463 升到 379.610 而 Q75 正确率从 71.875% 升到 99.479%，系数对 6 降至 4 使每区块 384 降到 256 比特，冗余从紧凑换到标准使容量从 30.0 KB 降到 18.7 KB 而抗损坏从 20% 升到 50%。</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#7dd3fc">
+    <!-- 纵向分区（第一版的毛病：分隔线在 y=238，而三角底边在 y=290、顶点标签在
+         y=306/326，于是三条说明文字直接压在三角形与顶点标签上）：
+           标题 26 ｜ 三角形 52~250 ｜ 顶点标签 268/290 ｜ 分隔线 312 ｜ 说明 334~374
+         三角形整体上移 40 单位、说明整体下移 34 单位，两者不再交叠；
+         重复的两处"默认档位"合并为一处，居中放在内三角下方。 -->
+    <text x="8" y="26" font-size="12.5">三方权衡示意（默认档位位于三角中部，而非某个顶点）</text>
+    <path d="M400 52L150 250H650Z" fill="none" stroke="#7dd3fc" stroke-opacity="0.65"/>
+    <path d="M400 140L305 205H495Z" fill="#fbbf24" fill-opacity="0.18" stroke="#fbbf24"/>
+    <circle cx="400" cy="186" r="4" fill="#fbbf24"/>
+    <text x="400" y="84" text-anchor="middle" font-size="12" fill="#fbbf24">隐蔽性更高</text>
+    <text x="400" y="226" text-anchor="middle" font-size="11.5" fill="#fbbf24">默认档位</text>
+    <text x="150" y="268" text-anchor="middle" font-size="11.5" fill="#97a3b6">更小改动量</text>
+    <text x="650" y="268" text-anchor="middle" font-size="11.5" fill="#97a3b6">更强抗损坏</text>
+    <text x="150" y="290" text-anchor="middle" font-size="11.5" fill="#97a3b6">容量更大（每区块比特数）</text>
+    <text x="650" y="290" text-anchor="middle" font-size="11.5" fill="#97a3b6">更抗破坏（可容忍丢失比例）</text>
+    <line x1="20" y1="312" x2="792" y2="312" stroke="#7dd3fc" stroke-opacity="0.2"/>
+    <text x="8" y="334" font-size="11.5" fill="#97a3b6">裕量 8 → 32：改动量 MSE 244.463 → 379.610，Q75 正确率 71.875% → 99.479%</text>
+    <text x="8" y="354" font-size="11.5" fill="#97a3b6">系数对 6 → 4：每区块 384 → 256 比特，0.5× 缩放存活率 0% → 72% 至 80%</text>
+    <text x="8" y="374" font-size="11.5" fill="#97a3b6">冗余 紧凑 → 标准：容量 30.0 KB → 18.7 KB，抗损坏 20% → 50%（默认取最稳的一侧）</text>
+  </g>
+</svg></div>
+<script>
+(function () {
+  'use strict';
+  var NAMES = ["figa-lsb","fig1-architecture","fig2-dct-modulation","fig3-redundancy","fig4-quadrant","fig5-pilot","figb-phase-search","fig6-test-results","figc-hamming","figd-tradeoff"];
+  var out = { checkWidth: 1280, tool: 'svg-geometry.node.js', figures: [], problems: [] };
+  var figs = document.querySelectorAll('svg.fig');
+  for (var fi = 0; fi < figs.length; fi++) {
+    var svg = figs[fi];
+    var name = NAMES[fi] || ('fig' + fi);
+    var vb = svg.getAttribute('viewBox').split(/[\s,]+/).map(Number);
+    var vx = vb[0], vy = vb[1], vw = vb[2], vh = vb[3];
+    var sr = svg.getBoundingClientRect();
+    var scale = sr.width / vw;
+    function toU(r) {
+      return { x: (r.left - sr.left) / scale + vx, y: (r.top - sr.top) / scale + vy,
+               w: r.width / scale, h: r.height / scale,
+               x2: (r.right - sr.left) / scale + vx, y2: (r.bottom - sr.top) / scale + vy };
+    }
+    var f = { name: name, viewBox: [vx, vy, vw, vh], renderWidth: Math.round(sr.width),
+              renderHeight: Math.round(sr.height), texts: [], rects: [], others: [] };
+    var nodes = svg.querySelectorAll('rect, text, line, path, circle, polyline, polygon, ellipse');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+      var r;
+      try { r = el.getBoundingClientRect(); } catch (e) { continue; }
+      if (!r.width && !r.height) continue;
+      var u = toU(r);
+      var tag = el.tagName.toLowerCase();
+      var rec = { tag: tag, x: +u.x.toFixed(1), y: +u.y.toFixed(1), w: +u.w.toFixed(1), h: +u.h.toFixed(1),
+                  x2: +u.x2.toFixed(1), y2: +u.y2.toFixed(1),
+                  text: tag === 'text' ? (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40) : undefined,
+                  fontSize: tag === 'text' ? +parseFloat(cs.fontSize).toFixed(2) : undefined };
+      if (tag === 'text') f.texts.push(rec); else if (tag === 'rect') f.rects.push(rec); else f.others.push(rec);
+      if (u.x < vx - 0.5 || u.y < vy - 0.5 || u.x2 > vx + vw + 0.5 || u.y2 > vy + vh + 0.5) {
+        out.problems.push({ fig: name, kind: '越界', detail: tag + ' ' + (rec.text || '') +
+          ' 超出 viewBox（元素 ' + rec.x + ',' + rec.y + ' → ' + rec.x2 + ',' + rec.y2 + '）' });
+      }
+      var margin = Math.min(u.x - vx, u.y - vy, (vx + vw) - u.x2, (vy + vh) - u.y2);
+      if (margin < 10 && margin > -0.5) {
+        out.problems.push({ fig: name, kind: '边距过紧', detail: tag + ' ' + (rec.text || '') +
+          ' 距 viewBox 边界仅 ' + margin.toFixed(1) + 'px' });
+      }
+      if (tag === 'text' && rec.fontSize < 10) {
+        out.problems.push({ fig: name, kind: '字号过小', detail: '"' + rec.text + '" 字号 ' + rec.fontSize });
+      }
+    }
+    for (var ti = 0; ti < f.texts.length; ti++) {
+      var t = f.texts[ti];
+      var cx = (t.x + t.x2) / 2, cy = (t.y + t.y2) / 2;
+      for (var ri = 0; ri < f.rects.length; ri++) {
+        var rr = f.rects[ri];
+        if (rr.w < 40 || rr.h < 20) continue;
+        if (cx >= rr.x && cx <= rr.x2 && cy >= rr.y && cy <= rr.y2) {
+          var sl = t.x - rr.x, sr2 = rr.x2 - t.x2, st = t.y - rr.y, sb = rr.y2 - t.y2;
+          if (sl < -1 || sr2 < -1 || st < -1 || sb < -1) {
+            out.problems.push({ fig: name, kind: '文字溢出容器', detail: '"' + t.text + '" 容器=[' +
+              rr.x + ',' + rr.y + ' ' + rr.w + '×' + rr.h + '] 文字=[' + t.x + ',' + t.y + ' ' + t.w + '×' + t.h +
+              '] 左/右/上/下余量=' + sl.toFixed(1) + '/' + sr2.toFixed(1) + '/' + st.toFixed(1) + '/' + sb.toFixed(1) });
+          }
+          break;
+        }
+      }
+    }
+    for (var a = 0; a < f.texts.length; a++) {
+      for (var b = a + 1; b < f.texts.length; b++) {
+        var A = f.texts[a], B = f.texts[b];
+        var ox = Math.min(A.x2, B.x2) - Math.max(A.x, B.x);
+        var oy = Math.min(A.y2, B.y2) - Math.max(A.y, B.y);
+        if (ox > 1 && oy > 1) {
+          out.problems.push({ fig: name, kind: '文字重叠', detail: '"' + A.text + '" 与 "' + B.text +
+            '" 相交 ' + ox.toFixed(1) + '×' + oy.toFixed(1) + 'px' });
+        }
+      }
+    }
+    out.figures.push(f);
+  }
+  var pre = document.createElement('pre');
+  pre.id = 'svgMetrics';
+  pre.textContent = JSON.stringify(out);
+  document.body.appendChild(pre);
+  document.title = 'metrics-done';
+})();
+</script></body></html>
