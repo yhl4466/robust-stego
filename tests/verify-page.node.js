@@ -1586,6 +1586,42 @@ for (const page of PAGES) {
         `图数=${(data.figures || []).length}；问题数=${problems.length}` +
         (problems.length ? `（${Object.keys(byKind).map((k) => k + '×' + byKind[k]).join('，')}）` : '') +
         `；过期/哈希不符=[${stale.join(', ')}]；测量日期=${data.checkedAt}`);
+
+      // 14b) 图 4 的象限标签必须对准各自象限的水平中心。
+      //      这一类"标签整体偏移"不会触发溢出/重叠检测（标签本身没压到任何东西），
+      //      第一版就漏掉了：四个标签统一偏右 60 单位，正好落在象限交界处。
+      //      判据用**实测几何**：网格由 4×4 个等大单元格组成，左半中心 = x0 + 宽/4、
+      //      右半中心 = x0 + 3×宽/4，标签中心与它的偏差必须 < 5 单位。
+      const fig4 = (data.figures || []).find((f) => f.name === 'fig4-quadrant');
+      if (!fig4) {
+        check('图 4 象限标签对齐象限中心', false, '度量文件里找不到 fig4-quadrant');
+      } else {
+        const cells = fig4.rects.filter((r) => Math.abs(r.w - 60) < 0.6 && Math.abs(r.h - 60) < 0.6);
+        const x0 = Math.min.apply(null, cells.map((r) => r.x));
+        const x1 = Math.max.apply(null, cells.map((r) => r.x2));
+        const y0 = Math.min.apply(null, cells.map((r) => r.y));
+        const y1 = Math.max.apply(null, cells.map((r) => r.y2));
+        const quarter = (x1 - x0) / 4;
+        const leftC = x0 + quarter, rightC = x0 + 3 * quarter, gridC = (x0 + x1) / 2;
+        const center = (t) => (t.x + t.x2) / 2;
+        const want = [['左上', leftC], ['右上', rightC], ['左下', leftC], ['右下', rightC]];
+        const errs = [];
+        want.forEach((pair) => {
+          const t = fig4.texts.find((t2) => t2.text && t2.text.indexOf(pair[0]) === 0);
+          if (!t) { errs.push(pair[0] + '(标签缺失)'); return; }
+          const e = center(t) - pair[1];
+          if (Math.abs(e) >= 5) errs.push(`${pair[0]} 偏差 ${e.toFixed(1)}`);
+        });
+        const tot = fig4.texts.find((t2) => t2.text && t2.text.indexOf('a + b = K') === 0);
+        const totErr = tot ? center(tot) - gridC : NaN;
+        const gridSquare = Math.abs((x1 - x0) - (y1 - y0)) < 0.6 && cells.length === 16;
+        check('图 4 象限标签对准象限中心（偏差 < 5）+「a + b = K」在网格正下方居中 + 网格为 4×4 正方形',
+          cells.length === 16 && gridSquare && errs.length === 0 &&
+          Math.abs(totErr) < 5 && Math.abs(leftC - 100) < 0.6 && Math.abs(rightC - 220) < 0.6,
+          `网格 x ${x0}~${x1}（y ${y0}~${y1}，单元格 ${quarter}，正方形=${gridSquare}，共 ${cells.length} 格）；` +
+          `左半中心=${leftC.toFixed(1)}、右半中心=${rightC.toFixed(1)}、网格中心=${gridC.toFixed(1)}；` +
+          `标签偏差=[${errs.join('，') || '全部 0.0'}]；a+b=K 偏差=${isNaN(totErr) ? '缺标签' : totErr.toFixed(1)}`);
+      }
     }
   }
 }
